@@ -1,0 +1,36 @@
+@import "./themes.css";
+
+.App {
+    height: 100vh;
+    text-align: center;
+    min-height: 94vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 1vmin);
+    color: white;
+    background-color: var(--primary_color);
+    text-align: center;
+    .selectorsContainer {
+        > div {
+            display: flex;
+            gap: 12px;
+        }
+        position: fixed;
+        bottom: 0;
+        z-index: 3;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: var(--primary_color);
+        padding: 8px;
+    }
+}
+
+p,
+input {
+    font-family: "PlaypenSans", "DigiSarvenaz" !important;
+    font-size: 1rem;
+}

@@ -1,0 +1,46 @@
+.CustomSelect {
+  .options {
+    display: flex;
+    gap: 4px;
+    font-family: "PlaypenSans", "DigiSarvenaz";
+    font-size: 12px;
+    width: fit-content;
+    align-items: center;
+    img{
+      border-radius: 2px;
+    }
+  }
+
+  .themePreview {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    margin-right: 2px;
+    background: linear-gradient(90deg, var(--primary_color), var(--secondary_color));
+  }
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .menu {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  .default {
+    background: linear-gradient(90deg, rgba(54, 48, 98, 1) 0%, rgba(31, 65, 114, 1) 40%, rgba(255, 173, 72, 1) 98%);
+  }
+  .dark {
+    background: linear-gradient(90deg, rgba(19, 32, 67, 1) 0%, rgba(31, 65, 114, 1) 40%, rgba(241, 180, 187, 1) 90%);
+  }
+
+  .light {
+    background: linear-gradient(90deg, rgba(255, 242, 216, 1) 0%, rgba(220, 204, 180, 1) 40%, rgba(17, 57, 70, 1) 98%);
+  }
+}

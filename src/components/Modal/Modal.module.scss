@@ -1,0 +1,109 @@
+.backdrop {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba($color: #000000, $alpha: 0.7);
+    position: fixed;
+    inset: 0 0 0 0;
+    z-index: 5;
+    cursor: pointer;
+}
+.modalContainer {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    inset: 0 0 0 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 4;
+    .modal {
+        z-index: 6;
+        width: 90%;
+        min-width: 300px;
+        max-width: 754px;
+        background-color: var(--primary_color);
+        border-radius: 8px;
+        padding: 20px 40px;
+        position: relative;
+        .closeIcon {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            &:hover {
+                transition: all 0.3s;
+                background-color: var(--light_primary_color);
+            }
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            p {
+                font-size: 1.2rem;
+                color: var(--tertiary_color);
+            }
+            .actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-evenly;
+                button {
+                    width: 40%;
+                    max-width: 100px;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    border: none;
+                    padding: 8px;
+                    font-size: 0.9rem;
+                    transition: all 0.3s;
+                    &:hover {
+                        transition: all 0.3s;
+                        opacity: 0.8;
+                    }
+                }
+                .confirmButton {
+                    background-color: var(--secondary_color);
+                    color: var(--primary_color);
+                }
+                .cancelButton {
+                    background-color: var(--light_primary_color);
+                    color: var(--tertiary_color);
+                }
+            }
+        }
+    }
+}
+.showModal {
+    .backdrop{
+        opacity: 1;
+        transition: all 0.2s;
+    }
+    .modalContainer .modal {
+        opacity: 1;
+        transition: all 0.3s;
+        position: relative;
+        bottom: 0;
+    }
+}
+.hideModal {
+    position: fixed;
+    z-index: -1;
+    .backdrop{
+        cursor: auto;
+        opacity: 0;
+        transition: all 0.2s;
+    }
+    .modalContainer .modal {
+        opacity: 0;
+        transition: all 0.2s;
+        position: relative;
+        bottom: -20px;
+    }
+}
