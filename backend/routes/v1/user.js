@@ -3,7 +3,7 @@ let router = express.Router()
 const { signUpValidator,signInValidator } = require('../../validators/user')
 const userModel = require('../../models/user')
 const bcrypt = require('bcrypt')
-
+const _ = require('lodash')
 router.post('/signup', (req, res) => {
     // const { error } = registorValidator(req.body)
     // if (error) return res.status(400).send({ message: error.message })
@@ -18,7 +18,10 @@ router.post('/signup', (req, res) => {
             else {
                 let salt = await bcrypt.genSalt(10)
                 let password = await bcrypt.hash(req.body.password, salt)
-                let user = new userModel({ ...req.body })
+                let user = new userModel(_.pick(req.body,[
+                    'name',
+                    'email'
+                ]))
                 user.password = password
                 user.save().then(newUser => {
                     let token = newUser.tokenGenerator()
