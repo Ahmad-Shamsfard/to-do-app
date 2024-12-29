@@ -1,13 +1,17 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "./Auth.module.scss";
 
-const Login = () => {
+const Login = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,8 +30,6 @@ const Login = () => {
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -36,21 +38,24 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted successfully", formData);
-      // Add API call for login here
       try {
-        const response = await fetch("https://your-backend-api.com/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+        const response = await axios.post("http://localhost:4500/api/users/login", {
+          email: formData.email,
+          password: formData.password,
         });
-        const result = await response.json();
-        console.log("Login successful:", result);
-        // Handle success (e.g., save token, redirect)
+
+        // Assume response contains user data
+        onLogin(response.data.user);
+
+        // Redirect to the home page
+        navigate("/");
       } catch (error) {
-        console.error("Login failed:", error);
+        console.error("Error logging in:", error);
+        if (error.response && error.response.data.message) {
+          setErrorMessage(error.response.data.message); // Display server error message
+        } else {
+          setErrorMessage("Network error. Please check your connection.");
+        }
       }
     }
   };
@@ -59,6 +64,7 @@ const Login = () => {
     <div className={styles.container}>
       <div className={styles.box}>
         <h2 className={styles.title}>Log In</h2>
+        {errorMessage && <div className={styles.errorMessage}>{errorMessage}</div>}
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <label htmlFor="email">Email</label>
@@ -80,9 +86,7 @@ const Login = () => {
               value={formData.password}
               onChange={handleInputChange}
             />
-            {errors.password && (
-              <div className={styles.error}>{errors.password}</div>
-            )}
+            {errors.password && <div className={styles.error}>{errors.password}</div>}
           </div>
           <button className={styles.button} type="submit">
             Log In

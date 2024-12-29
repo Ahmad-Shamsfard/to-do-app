@@ -10,10 +10,10 @@ const LogoutButton = ({ handleLogout }) => {
 
   return (
     <SmallButton title="logout">
-      <button onClick={handleLogout} className="logoutButton">
+      <span onClick={handleLogout} className="logoutButton">
         <FontAwesomeIcon icon={faSignOutAlt} />
         <Tooltip text={t("logout")} place="left" />
-      </button>
+      </span>
     </SmallButton>
   );
 };
