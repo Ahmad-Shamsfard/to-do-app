@@ -16,12 +16,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-mongoose.connect('mongodb://localhost:27017\to-do-list')
+mongoose.connect('mongodb://localhost:27017/to-do-list')
 .then(()=>{
   console.log('DB connected');
 }).catch((err)=>{
   console.log(err.massege);
 })
+
+const user = require('./routes/v1/user')
+app.use('/api/users',user)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -36,7 +39,6 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
 });
 
 module.exports = app;
