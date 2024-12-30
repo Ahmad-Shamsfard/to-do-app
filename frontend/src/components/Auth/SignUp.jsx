@@ -1,12 +1,15 @@
-import React, { useState } from "react";
-import styles from "./Auth.module.scss";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import styles from './Auth.module.scss';
 
-const SignUp = () => {
+const SignUp = ({ onSignUp }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -21,31 +24,49 @@ const SignUp = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = 'Please enter a valid email address';
     }
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = 'Password must be at least 6 characters';
     }
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = 'Passwords do not match';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted successfully", formData);
-      // Add API call or further submission logic here
+      try {
+        const response = await axios.post('http://localhost:4500/api/users/signup', {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        });
+
+        // Call the onSignUp function passed from App
+        onSignUp(response.data.user);
+
+        // Redirect to the home page
+        navigate('/');
+      } catch (error) {
+        console.error('Error signing up:', error);
+        if (error.response) {
+          setErrors(error.response.data.errors || {});
+        } else {
+          alert('Network error. Please check your back-end server.');
+        }
+      }
     }
   };
 
@@ -74,9 +95,7 @@ const SignUp = () => {
               value={formData.email}
               onChange={handleInputChange}
             />
-            {errors.email && (
-              <div className={styles.error}>{errors.email}</div>
-            )}
+            {errors.email && <div className={styles.error}>{errors.email}</div>}
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="password">Password</label>
@@ -87,9 +106,7 @@ const SignUp = () => {
               value={formData.password}
               onChange={handleInputChange}
             />
-            {errors.password && (
-              <div className={styles.error}>{errors.password}</div>
-            )}
+            {errors.password && <div className={styles.error}>{errors.password}</div>}
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="confirmPassword">Confirm Password</label>
@@ -100,9 +117,7 @@ const SignUp = () => {
               value={formData.confirmPassword}
               onChange={handleInputChange}
             />
-            {errors.confirmPassword && (
-              <div className={styles.error}>{errors.confirmPassword}</div>
-            )}
+            {errors.confirmPassword && <div className={styles.error}>{errors.confirmPassword}</div>}
           </div>
           <button className={styles.button} type="submit">
             Sign Up

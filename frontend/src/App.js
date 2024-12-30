@@ -13,7 +13,6 @@ function App() {
   const [theme, setTheme] = useState();
   const [user, setUser] = useState(null); // Authentication state
 
-  // Set test user if no user is in localStorage
   useEffect(() => {
     const localStorageLocale = localStorage.getItem('locale');
     const localStorageTheme = localStorage.getItem('theme');
@@ -26,42 +25,36 @@ function App() {
     setLocale(localStorageLocale);
     setTheme(localStorageTheme);
 
-    // Check for an existing user in localStorage, else set a test user
+    // Check for an existing user in localStorage
     const savedUser = localStorage.getItem('user');
-    // if (savedUser) {
-    //   setUser(JSON.parse(savedUser));
-    // } else {
-    //   // Set a test user if no user is found
-    //   const testUser = { username: 'testuser', email: 'test@example.com' };
-    //   setUser(testUser);
-    //   localStorage.setItem('user', JSON.stringify(testUser)); // Persist the test user
-    // }
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
-  useEffect(() => {
-    switch (theme) {
-      case 'default':
-      default:
-        document.querySelector('meta[name="theme-color"]').content = '#363062';
-        break;
-      case 'dark':
-        document.querySelector('meta[name="theme-color"]').content = '#132043';
-        break;
-      case 'light':
-        document.querySelector('meta[name="theme-color"]').content = '#fff2d8';
-        break;
-    }
-  }, [theme]);
+  const handleSignUp = (userData) => {
+    setUser(userData); // Set user state
+    localStorage.setItem('user', JSON.stringify(userData)); // Persist user in localStorage
+  };
 
+  useEffect(() => {
+    // Retrieve user from localStorage on initial load
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+  
   const handleLogin = (userData) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // Save to localStorage for persistence
+    localStorage.setItem("user", JSON.stringify(userData)); // Save user to localStorage
   };
-
+  
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem("user"); // Remove user from localStorage
   };
+  
 
   return (
     <div className="App" data-theme={theme}>
@@ -75,7 +68,7 @@ function App() {
         {/* Signup route */}
         <Route
           path="/signup"
-          element={user ? <Navigate to="/" /> : <SignUp />}
+          element={user ? <Navigate to="/" /> : <SignUp onSignUp={handleSignUp} />}
         />
 
         {/* Main Todo list route */}
