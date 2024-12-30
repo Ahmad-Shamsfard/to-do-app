@@ -76,7 +76,7 @@ router.post('/edit/:id', Auth, (req, res) => {
     }
 })
 
-router.post('/taggleState/:id', Auth, (req, res) => {
+router.post('/toggleState/:id', Auth, (req, res) => {
         userModel.findById(req.user._id).then(user => {
             if (!user)
                 res.status(401).send({ message: 'کاربر یافت نشد' })
