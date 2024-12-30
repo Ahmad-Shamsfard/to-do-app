@@ -28,6 +28,9 @@ mongoose.connect('mongodb://localhost:27017/to-do-list')
 const user = require('./routes/v1/user')
 app.use('/api/users',user)
 
+const task = require('./routes/v1/task')
+app.use('/api/tasks',task)
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
