@@ -8,7 +8,7 @@ router.post('/signup', (req, res) => {
     // const { error } = registorValidator(req.body)
     // if (error) return res.status(400).send({ message: error.message })
     console.log("req.body",req.body)
-    let checkSignUpinpute  = signUpValidator(req.body)
+    let checkSignUpinput  = signUpValidator(req.body)
     
     if (checkSignUpinpute.error) res.status(400).send({ message: checkSignUpinpute?.error?.message })
     else {
