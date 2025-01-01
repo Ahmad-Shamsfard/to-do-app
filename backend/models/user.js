@@ -22,14 +22,14 @@ let userSchema = new Schema({
         type: String,
         required: true
     },
-    language:{
-        type:String,
-        enum : ['En','Fa'],
+    language: {
+        type: String,
+        enum: ['En', 'Fa'],
         default: 'En'
     },
-    theme:{
-        type:String,
-        enum : ['default','light','dark'],
+    theme: {
+        type: String,
+        enum: ['default', 'light', 'dark'],
         default: 'default'
     },
     password: {

@@ -1,7 +1,6 @@
 const jwt= require('jsonwebtoken')
 const config = require('config')
 
-
 module.exports = function(req,res,next){
     try {
         let token= req.header('toDoList-Auth-Token')

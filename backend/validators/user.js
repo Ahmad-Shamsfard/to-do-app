@@ -1,6 +1,5 @@
 const joi = require('joi')
 
-
 const signUpValidator = function (data) {
     const schema = joi.object({
         name: joi.string().min(3).max(20).required(),
