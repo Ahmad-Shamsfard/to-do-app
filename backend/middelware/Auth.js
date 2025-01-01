@@ -5,8 +5,7 @@ const config = require('config')
 module.exports = function(req,res,next){
     try {
         let token= req.header('toDoList-Auth-Token')
-        console.log(token);
-        
+        // console.log(token);
         if(!token) 
             res.status(403).send({message:'forbid acsses'})
         else {
