@@ -6,7 +6,6 @@ import Login from './components/Auth/Login';
 import SignUp from './components/Auth/SignUp';
 import LanguageSelector from './components/LanguageSelector/LanguageSelector';
 import ThemeSelector from './components/ThemeSelector/ThemeSelector';
-import LogoutButton from './components/LogoutButton/LogoutButton';
 
 function App() {
   const [locale, setLocale] = useState();
@@ -14,47 +13,36 @@ function App() {
   const [user, setUser] = useState(null); // Authentication state
 
   useEffect(() => {
+    // Retrieve locale and theme from localStorage
     const localStorageLocale = localStorage.getItem('locale');
     const localStorageTheme = localStorage.getItem('theme');
+    
     if (!localStorageLocale) {
       localStorage.setItem('locale', 'en');
     }
     if (!localStorageTheme) {
       localStorage.setItem('theme', 'default');
     }
-    setLocale(localStorageLocale);
-    setTheme(localStorageTheme);
+    
+    setLocale(localStorageLocale || 'en');
+    setTheme(localStorageTheme || 'default');
 
-    // Check for an existing user in localStorage
+    // Retrieve user from localStorage (if exists)
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
   }, []);
 
-  const handleSignUp = (userData) => {
-    setUser(userData); // Set user state
-    localStorage.setItem('user', JSON.stringify(userData)); // Persist user in localStorage
+  const handleSignUp = (userToken) => {
+    setUser(userToken);
+    localStorage.setItem('user', JSON.stringify(userToken)); // Persist user in localStorage
   };
 
-  useEffect(() => {
-    // Retrieve user from localStorage on initial load
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
-  
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData)); // Save user to localStorage
+  const handleLogin = (userToken) => {
+    setUser(userToken);
+    localStorage.setItem('user', JSON.stringify(userToken)); // Save user to localStorage
   };
-  
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("user"); // Remove user from localStorage
-  };
-  
 
   return (
     <div className="App" data-theme={theme}>
@@ -77,13 +65,10 @@ function App() {
           element={
             user ? (
               <>
-                <ToDoList locale={locale} />
+                <ToDoList locale={locale} setUser={setUser}/>
                 <div className="selectorsContainer">
-                  <div>
-                    <LanguageSelector setLocale={setLocale} />
-                    <ThemeSelector setTheme={setTheme} />
-                  </div>
-                  <LogoutButton handleLogout={handleLogout} />
+                  <LanguageSelector setLocale={setLocale} />
+                  <ThemeSelector setTheme={setTheme} />
                 </div>
               </>
             ) : (
