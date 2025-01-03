@@ -55,7 +55,7 @@ const SignUp = ({ onSignUp }) => {
         });
 
         // Call the onSignUp function passed from App
-        onSignUp(response.data.user);
+        onSignUp(response.data.token);
 
         // Redirect to the home page
         navigate('/');

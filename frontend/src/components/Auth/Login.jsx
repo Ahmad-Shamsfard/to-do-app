@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
         });
 
         // Assume response contains user data
-        onLogin(response.data.user);
+        onLogin(response.data.token);
 
         // Redirect to the home page
         navigate("/");

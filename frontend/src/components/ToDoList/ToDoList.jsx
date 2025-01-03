@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./ToDoList.module.scss";
 import Task from "../Task/Task";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,87 +9,26 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import toFarsiNumber from "../../utils/toFarsiNumber";
 import { useTranslation } from "react-i18next";
-import { saveAs } from "file-saver";
 import Modal from "../Modal/Modal";
-import ImportButton from "../ImportButton/ImportButton";
-import ExportButton from "../ExportButton/ExportButton";
 import SmallButton from "../SmallButton/SmallButton";
 import Tooltip from "../Tooltip/Tooltip";
+import axios from "axios";
+import LogoutButton from "../LogoutButton/LogoutButton";
 
-const ToDoList = ({ locale }) => {
-  const reducer = (tasks, action) => {
-    switch (action.type) {
-      case "add":
-        return [
-          ...tasks,
-          {
-            id:
-              Date.now() +
-              "-" +
-              (action.payload?.index !== undefined &&
-                action.payload?.index + "-") +
-              action.payload.title,
-            title: action.payload.title,
-            done: action.payload.done || false,
-          },
-        ];
-      case "toggle":
-        return tasks.map((task) => {
-          if (task.id === action.payload.id) {
-            return {
-              ...task,
-              done: !task.done,
-            };
-          }
-          return task;
-        });
-      case "delete":
-        return tasks.filter((task) => task.id !== action.payload.id);
-      case "edit":
-        return tasks.map((task) => {
-          if (task.id === action.payload.id) {
-            return {
-              ...task,
-              title: action.payload.title,
-            };
-          }
-          return task;
-        });
-      case "deleteAll":
-        return [];
-      case "checkAll":
-        return tasks.map((task) => {
-          return {
-            ...task,
-            done: true,
-          };
-        });
-      case "uncheckAll":
-        return tasks.map((task) => {
-          return {
-            ...task,
-            done: false,
-          };
-        });
-      default:
-        return tasks;
-    }
-  };
+const ToDoList = ({ locale, setUser }) => {
   //states and other hooks
-  const initialTasks = JSON.parse(localStorage.getItem("tasks") || null);
-  const [tasks, dispatch] = useReducer(reducer, initialTasks || []);
+  const token = localStorage.getItem("user");
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [error, setError] = useState({
     show: false,
     message: "",
   });
-  const Closed_Modals = { import: false, deleteAll: false, isEmpty: false };
+  const Closed_Modals = { deleteAll: false, isEmpty: false };
   const [showModal, setShowModal] = useState(Closed_Modals);
-  const [importedtasks, setImportedtasks] = useState([]);
   const [doneAll, setDoneAll] = useState(false);
 
   const { t } = useTranslation("");
-  const importFileRef = useRef(null);
 
   //functions
   const handleNewTaskAdd = (e) => {
@@ -98,114 +37,113 @@ const ToDoList = ({ locale }) => {
   };
 
   const isValid = newTask.length >= 3 && newTask.length <= 255;
-  const handleSubmit = (e) => {
+  const addTask = (e) => {
     e.preventDefault();
     if (isValid) {
-      dispatch({
-        type: "add",
-        payload: {
-          title: newTask,
-        },
-      });
-      setNewTask("");
-      setError({ ...error, show: false });
-    } else if (newTask.length < 3) {
-      setError({ show: true, message: "input_must_be_at_least_3_characters" });
-    } else if (newTask.length > 250) {
+      axios
+        .post(
+          "http://localhost:4500/api/tasks/add",
+          { task: newTask },
+          {
+            headers: {
+              "toDoList-Auth-Token": JSON.parse(token),
+            },
+          }
+        )
+        .then((response) => {
+          setTasks(response.data.list); // Update tasks from the server
+          setNewTask(""); // Clear the input field
+        })
+        .catch((error) => {
+          console.error("Error adding task:", error);
+        });
+    } else {
       setError({
         show: true,
-        message: "input_cant_be_more_than_250_characters",
+        message:
+          newTask.length < 3
+            ? "input_must_be_at_least_3_characters"
+            : "input_cant_be_more_than_250_characters",
       });
-    } else {
-      setError({ ...error, show: false });
     }
+  };
+
+  const handleDeleteAllTasks = () => {
+    axios
+      .delete("http://localhost:4500/api/tasks/delete", {
+        headers: {
+          "toDoList-Auth-Token": JSON.parse(token),
+        },
+      })
+      .then(() => {
+        setTasks([]);
+        setShowModal({ ...Closed_Modals });
+      })
+      .catch((error) => console.error("Error deleting all tasks:", error));
+  };
+
+  const handleEditTask = (taskId, newTitle) => {
+    axios
+      .post(
+        `http://localhost:4500/api/tasks/edit/${taskId}`,
+        { task: newTitle },
+        {
+          headers: {
+            "toDoList-Auth-Token": JSON.parse(token),
+          },
+        }
+      )
+      .then((response) => setTasks(response.data.list))
+      .catch((error) => console.error("Error editing task:", error));
+  };
+
+  const handleDeleteTask = (taskId) => {
+    axios
+      .delete(`http://localhost:4500/api/tasks/delete/${taskId}`, {
+        headers: {
+          "toDoList-Auth-Token": JSON.parse(token),
+        },
+      })
+      .then((response) => setTasks(response.data.list))
+      .catch((error) => console.error("Error deleting task:", error));
   };
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
-
-  //export tasks to a .txt file
-  const handleExportToFile = () => {
-    if (tasks.length > 0) {
-      const savingFormat = tasks.map((task, index) => {
-        return `${task.done ? "✓" : ""}${
-          locale === "fa" ? toFarsiNumber(index + 1) : index + 1
-        } . ${task.title}\n`;
-      });
-      const file = new Blob(savingFormat, { type: "text/plain;charset=utf-8" });
-      saveAs(file, "myTasks.txt");
-    } else {
-      setShowModal({ ...Closed_Modals, isEmpty: true });
-    }
-  };
-
-  //import tasks from a .txt file
-  const handleImportFromFile = async (e) => {
-    e.preventDefault();
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target.result;
-      let temp = text.split("\n").map((string) => {
-        let tempTask = {};
-        if (string.charAt(0) === "✓") {
-          tempTask.done = true;
-        }
-        tempTask.title = string.replace(
-          /✓|[\u06F0-\u06F90-9]|[0-9]{1,2}| {0,}\. {0,}/g,
-          ""
-        );
-        return tempTask;
-      });
-      //remove empty element
-      setImportedtasks(temp.filter((t) => t.title));
-      if (temp.filter((t) => t.title).length === 0) {
-        setShowModal({ ...Closed_Modals, isEmpty: true });
-      } else {
-        setShowModal({ ...Closed_Modals, import: true });
-      }
-    };
-    reader.readAsText(e.target.files[0]);
-  };
+    axios
+      .get("http://localhost:4500/api/tasks", {
+        headers: {
+          "toDoList-Auth-Token": JSON.parse(token),
+        },
+      })
+      .then((response) => {
+        setTasks(response.data.list);
+      })
+      .catch((error) => console.error("Error fetching tasks:", error));
+  }, []);
 
   const handleModalClose = () => {
-    setShowModal({...Closed_Modals});
-    handleClearImportedFile();
-  };
-
-  const handleConfirmImport = () => {
-    importedtasks.forEach((task, index) => {
-      dispatch({
-        type: "add",
-        payload: { title: task.title, index: index, done: task.done },
-      });
-    });
-    setShowModal(...Closed_Modals);
-    setImportedtasks([]);
-    handleClearImportedFile();
-  };
-
-  const handleClearImportedFile = () => {
-    if (importFileRef.current) {
-      importFileRef.current.value = "";
-      importFileRef.current.type = "text";
-      importFileRef.current.type = "file";
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    setShowModal({...Closed_Modals, deleteAll: true});
-  };
-  const handleDeleteAllTasks = () => {
-    dispatch({ type: "deleteAll" });
     setShowModal({ ...Closed_Modals });
   };
 
-  const handleToggleCheck = () => {
-    setDoneAll(!doneAll);
-    doneAll === true
-      ? dispatch({ type: "uncheckAll" })
-      : dispatch({ type: "checkAll" });
+  const handleConfirmDelete = () => {
+    setShowModal({ ...Closed_Modals, deleteAll: true });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  const handleToggleTask = (taskId) => {
+    console.log("tasks", taskId);
+    axios
+      .get(`http://localhost:4500/api/tasks/toggleState/${taskId}`, {
+        headers: {
+          "toDoList-Auth-Token": JSON.parse(token),
+        },
+      })
+      .then((response) => setTasks(response.data.list)) // Update tasks from the server
+      .catch((error) => console.error("Error toggling task:", error));
   };
 
   return (
@@ -216,7 +154,7 @@ const ToDoList = ({ locale }) => {
             <FontAwesomeIcon icon={faEraser} />
             <Tooltip text={t("delete_all")} place="right" />
           </SmallButton>
-          <SmallButton handleClick={handleToggleCheck}>
+          <SmallButton>
             <FontAwesomeIcon icon={faListCheck} />
             <Tooltip
               text={t(doneAll ? "uncheck_all" : "check_all")}
@@ -225,11 +163,7 @@ const ToDoList = ({ locale }) => {
           </SmallButton>
         </div>
         <div>
-          <ImportButton
-            handleChange={handleImportFromFile}
-            importFileRef={importFileRef}
-          />
-          <ExportButton handleClick={handleExportToFile} />
+          <LogoutButton handleLogout={handleLogout} />
         </div>
       </div>
       <div
@@ -251,13 +185,6 @@ const ToDoList = ({ locale }) => {
         }
       >
         <Modal
-          show={showModal.import}
-          text={t("import_file_confiramation")}
-          handleClose={() => handleModalClose()}
-          handleConfirm={() => handleConfirmImport()}
-          actions
-        />
-        <Modal
           show={showModal.deleteAll}
           text={t("delete_all_confiramation")}
           handleClose={() => handleModalClose()}
@@ -270,7 +197,7 @@ const ToDoList = ({ locale }) => {
           handleClose={() => handleModalClose()}
         />
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={addTask}>
           <h1>{t("to_do_list")}</h1>
           <label>
             <input
@@ -302,9 +229,10 @@ const ToDoList = ({ locale }) => {
             .map((task, index) => (
               <Task
                 task={task}
-                dispatch={dispatch}
-                key={task.id}
-                error={error}
+                onToggle={() => handleToggleTask(task._id)}
+                onEdit={(newTitle) => handleEditTask(task._id, newTitle)}
+                onDelete={() => handleDeleteTask(task._id)}
+                key={task._id}
                 setError={setError}
                 index={locale === "fa" ? toFarsiNumber(index + 1) : index + 1}
               />

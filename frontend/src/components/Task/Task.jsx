@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import styles from "./Task.module.scss";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
   faPenToSquare,
@@ -9,96 +10,69 @@ import {
   faTrash,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useTranslation } from "react-i18next";
 import Tooltip from "../Tooltip/Tooltip";
+import { useTranslation } from "react-i18next";
 
-const Task = ({ task, dispatch, index, error, setError }) => {
-  const { t } = useTranslation();
+const Task = ({ task, onToggle, onEdit, onDelete, index, error, setError }) => {
   const [editMode, setEditMode] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(task.title);
-  const [deleted, setDeleted] = useState();
+  const [editedTitle, setEditedTitle] = useState(task.task || "");
+  const [deleted, setDeleted] = useState(false); // For animating the deletion
+  const { t } = useTranslation();
+  const taskRef = useRef(null);
 
-  const newRef = useRef(null);
-
-  const isValid = editedTitle.length >= 3 && editedTitle.length <= 255;
+  // Handle confirm edit
   const handleEditConfirm = (e) => {
     e.preventDefault();
-    if (isValid) {
-      dispatch({ type: "edit", payload: { title: editedTitle, id: task.id } });
-      setEditMode(false);
+    if (editedTitle.trim().length === 0) {
+      setError({ show: true, message: t("task_cannot_be_empty") });
+      return;
     }
-    if (editedTitle.length < 3) {
-      setError({ show: true, message: "input_must_be_at_least_3_characters" });
-    } else if (editedTitle.length > 250) {
-      setError({
-        show: true,
-        message: "input_cant_be_more_than_250_characters",
-      });
-    } else {
-      setError({ ...error, show: false });
-    }
+    onEdit(editedTitle); // Trigger onEdit with the new title
+    setEditMode(false);
+    setError({ show: false, message: "" });
   };
 
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (newRef.current && !newRef.current.contains(e.target)) {
-        setEditMode(false);
-        setError({ ...error, show: false });
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [error, setError]);
-
+  // Handle undo edit
   const handleUndoEdit = () => {
-    setEditedTitle(task.title);
-    setError({ ...error, show: false });
+    setEditedTitle(task.task); // Revert back to original task name
+    setError({ show: false, message: "" });
   };
-  const handleTaskDelete = () => {
-    setDeleted(true);
+
+  // Handle delete with animation
+  const handleDelete = () => {
+    setDeleted(true); // Trigger deletion animation
     setTimeout(() => {
-      dispatch({ type: "delete", payload: { id: task.id } });
-    }, [300]);
+      onDelete(); // Execute delete after animation
+    }, 200); // Match the duration of the CSS animation
   };
+
   return (
     <li
-      className={
-        styles.task +
-        " " +
-        (task.done ? styles.taskDone : "") +
-        " " +
-        (deleted ? styles.taskDeleted : "")
-      }
-      ref={newRef}
+      className={`${styles.task} ${task.state ? styles.taskDone : ""} ${
+        deleted ? styles.taskDeleted : ""
+      }`}
+      ref={taskRef}
     >
-      {editMode === false ? (
+      {!editMode ? (
         <>
-          <div className={styles.title} onClick={() => setEditMode(true)}>
+          <div className={styles.title}>
             <span>{index}.</span>
-            <p>{task?.title}</p>
+            <p>{task.task}</p>
           </div>
           <div className={styles.actions}>
-            <button
-              onClick={() =>
-                dispatch({ type: "toggle", payload: { id: task.id } })
-              }
-            >
-              {task.done === false ? (
+            <button onClick={onToggle}>
+              {task.state === false ? (
                 <FontAwesomeIcon icon={faSquareCheck} />
               ) : (
                 <FontAwesomeIcon icon={faSquareMinus} />
               )}
-              <Tooltip text={task.done ? t("undone") : t("done")} />
+              <Tooltip text={task.state ? t("undone") : t("done")} />
             </button>
             <button onClick={() => setEditMode(true)}>
               <FontAwesomeIcon icon={faPenToSquare} />
               <Tooltip text={t("edit")} />
             </button>
-            <button onClick={handleTaskDelete}>
+            <button onClick={handleDelete}>
               <FontAwesomeIcon icon={faTrash} />
               <Tooltip text={t("delete")} />
             </button>
@@ -114,7 +88,7 @@ const Task = ({ task, dispatch, index, error, setError }) => {
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
               />
-              {editedTitle !== task.title && (
+              {editedTitle !== task.task && (
                 <button
                   type="button"
                   className={styles.undoButton}
@@ -125,7 +99,7 @@ const Task = ({ task, dispatch, index, error, setError }) => {
               )}
             </form>
           </div>
-          <div className={styles.actions + " " + styles.editingButtons}>
+          <div className={`${styles.actions} ${styles.editingButtons}`}>
             <button type="submit" onClick={handleEditConfirm}>
               <FontAwesomeIcon icon={faCheck} />
               <Tooltip text={t("confirm")} />
