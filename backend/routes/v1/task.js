@@ -121,7 +121,7 @@ router.delete('/delete', Auth, (req, res) => {
     })
 })
 
-router.post('/toggleState/:id', Auth, (req, res) => {
+router.get('/toggleState/:id', Auth, (req, res) => {
     userModel.findById(req.user._id).then(user => {
         if (!user)
             res.status(401).send({ message: 'کاربر یافت نشد' })
@@ -147,7 +147,7 @@ router.post('/toggleState/:id', Auth, (req, res) => {
     })
 })
 
-router.post('/toggleAllStates', Auth, (req, res) => {
+router.get('/toggleAllStates', Auth, (req, res) => {
     userModel.findById(req.user._id).then(user => {
         if (!user)
             res.status(401).send({ message: 'کاربر یافت نشد' })

@@ -60,35 +60,38 @@ router.post('/login', (req, res) => {
     }
 })
 
-router.put('/changeLanguage',Auth, (req, res) => {
+router.post('/changeLanguage', Auth, (req, res) => {
     userModel.findById(req.user._id).then(user => {
         if (!user)
             res.status(401).send({ message: 'کاربر یافت نشد' })
         else {
-            if (user.language === 'Fa') {
-                user.language = 'En'
+            let valid = ['fa', 'en']
+            let language= req.body.language
+            if (typeof language !== 'undefined' && valid.includes(language)) {
+                user.language = language
+                user.save().then(newUser => {
+                    res.status(200).send({ message: `language change to ${user.language}`, user: newUser })
+                }).catch(err => {
+                    res.status(500).send({ message: err.message })
+                })
             }
             else {
-                user.language = 'Fa'
+                res.status(400).send({ message: `them must be one of ${valid}` })
             }
-
-            user.save().then(newUser => {
-                res.status(200).send({ message: `language change to ${user.language}`, user: newUser })
-            }).catch(err => {
-                res.status(400).send({ message: err.message })
-            })
         }
-    })
+    }
+    )
 })
-router.post('/changeTheme',Auth, (req, res) => {
+
+router.post('/changeTheme', Auth, (req, res) => {
     userModel.findById(req.user._id).then(user => {
         if (!user)
             res.status(401).send({ message: 'کاربر یافت نشد' })
         else {
-            
+
             let theme = req.body.theme
-            let valid = ['default','light','dark']
-            if ( typeof req.body.theme !=='undefined' && valid.includes(theme)) {
+            let valid = ['default', 'light', 'dark']
+            if (typeof req.body.theme !== 'undefined' && valid.includes(theme)) {
                 user.theme = theme
 
                 user.save().then(newUser => {
@@ -101,7 +104,7 @@ router.post('/changeTheme',Auth, (req, res) => {
                 res.status(400).send({ message: `them must be one of ${valid}` })
             }
 
-            
+
         }
     })
 })

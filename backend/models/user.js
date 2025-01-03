@@ -24,8 +24,8 @@ let userSchema = new Schema({
     },
     language: {
         type: String,
-        enum: ['En', 'Fa'],
-        default: 'En'
+        enum: ['en', 'fa'],
+        default: 'en'
     },
     theme: {
         type: String,
